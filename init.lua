@@ -5,7 +5,7 @@ hs.loadSpoon("SpoonInstall")
 
 Install=spoon.SpoonInstall
 
-local hyper = {'ctrl', 'option'}
+local hyper = {'ctrl', 'command'}
 
 local alert = require 'hs.alert'
 local application = require 'hs.application'
@@ -45,18 +45,19 @@ local key2App = {
     h = {'/Applications/iTerm.app', 'English', 2},
     j = {'/Applications/Emacs.app', 'English', 2},
     k = {'/Applications/Google Chrome.app', 'English', 1},
-    l = {'/System/Library/CoreServices/Finder.app', 'English', 1},
-    f = {'/Applications/Chromium.app', 'English', 1},
-    c = {'/Applications/Kindle.app', 'English', 2},
-    w = {'/Applications/WeChat.app', 'Chinese', 1},
-    e = {'/Users/andy/fast-photo/node_modules/electron/dist/Electron.app', 'Chinese', 1},
+    f = {'/System/Library/CoreServices/Finder.app', 'English', 1},
+    -- f = {'/Applications/Chromium.app', 'English', 1},
+    -- c = {'/Applications/Kindle.app', 'English', 2},
+    -- w = {'/Applications/WeChat.app', 'Chinese', 1},
+    z = {'/Applications/DingTalk.app', 'Chinese', 1},
+    -- e = {'/Users/andy/fast-photo/node_modules/electron/dist/Electron.app', 'Chinese', 1},
     a = {'/Applications/wechatwebdevtools.app', 'English', 2},
-    d = {'/Applications/Dash.app', 'English', 1},
+    -- d = {'/Applications/Dash.app', 'English', 1},
     s = {'/Applications/System Preferences.app', 'English', 1},
-    p = {'/Applications/Preview.app', 'Chinese', 2},
-    b = {'/Applications/MindNode.app', 'Chinese', 1},
+    -- p = {'/Applications/Preview.app', 'Chinese', 2},
+    -- b = {'/Applications/MindNode.app', 'Chinese', 1},
     n = {'/Applications/NeteaseMusic.app', 'Chinese', 1},
-    m = {'/Applications/Sketch.app', 'English', 2},
+    -- m = {'/Applications/Sketch.app', 'English', 2},
 }
 
 -- Show launch application's keystroke.
@@ -85,7 +86,7 @@ local function showAppKeystroke()
     end
 end
 
-hs.hotkey.bind(hyper, "z", showAppKeystroke)
+hs.hotkey.bind(hyper, "d", showAppKeystroke)
 
 -- Maximize window when specify application started.
 local maximizeApps = {
@@ -109,7 +110,7 @@ end)
 
 -- Manage application's inputmethod status.
 local function Chinese()
-    hs.keycodes.currentSourceID("com.sogou.inputmethod.sogou.pinyin")
+    hs.keycodes.currentSourceID("com.baidu.inputmethod.BaiduIM.wubi")
 end
 
 local function English()
@@ -320,12 +321,12 @@ moveToScreen = function(win, n, showNotify)
     end
 end
 
-function resizeToCenter()
+function resizeToCenter(isMax)
     local win = hs.window.focusedWindow()
     local f = win:frame()
     local screen = win:screen()
     local max = screen:frame()
-    local winScale = 0.7
+    local winScale = isMax and 1 or 0.7
 
     f.x = max.x + (max.w * (1 - winScale) / 2)
     f.y = max.y + (max.h * (1 - winScale) / 2)
@@ -333,6 +334,7 @@ function resizeToCenter()
     f.h = max.h * winScale
     win:setFrame(f)
 end
+
 
 -- Power operation.
 caffeinateOnIcon = [[ASCII:
@@ -351,7 +353,7 @@ e.2......6.3..........t..q....
 .....5c.......................
 ]]
 
-    caffeinateOffIcon = [[ASCII:
+caffeinateOffIcon = [[ASCII:
 .....1a.....x....AC.y.......zE
 ..............................
 ......4.......................
@@ -367,6 +369,7 @@ e.2......6.3..........t..q....
 ...x.5c....y.......z..........
 ]]
 
+   
 local caffeinateTrayIcon = hs.menubar.new()
 
 local function caffeinateSetIcon(state)
@@ -395,7 +398,21 @@ caffeinateTrayIcon:setClickCallback(toggleCaffeinate)
 caffeinateSetIcon(sleepStatus)
 
 -- Window operations.
-hs.hotkey.bind(hyper, 'U', resizeToCenter)
+local max = false
+
+hs.hotkey.bind(
+   hyper, 'U',
+   function()
+      resizeToCenter(max)
+      max = not max
+end)
+
+hs.hotkey.bind(
+   hyper, 'P',
+   function()
+      window.focusedWindow():toggleFullScreen()
+end)
+
 
 hs.hotkey.bind(
     hyper, "Y",
@@ -409,21 +426,15 @@ hs.hotkey.bind(
         window.focusedWindow():moveToUnit(layout.right50)
 end)
 
-hs.hotkey.bind(
-    hyper, "P",
-    function()
-        window.focusedWindow():toggleFullScreen()
-end)
+-- hs.hotkey.bind(
+--     hyper, ";",
+--     function()
+--         -- Kill current focused window.
+--         window.focusedWindow():close()
 
-hs.hotkey.bind(
-    hyper, ";",
-    function()
-        -- Kill current focused window.
-        window.focusedWindow():close()
-
-        -- Then focus next window.
-        hs.window.frontmostWindow():focus()
-end)
+--         -- Then focus next window.
+--         hs.window.frontmostWindow():focus()
+-- end)
 
 hs.hotkey.bind(
     hyper, "-",
@@ -469,12 +480,13 @@ hs.hotkey.bind(
 end)
 
 -- Binding key to start plugin.
-Install:andUse(
-    "WindowHalfsAndThirds",
-    {
-        config = {use_frame_correctness = true},
-        hotkeys = {max_toggle = {hyper, "I"}}
-})
+-- Install:andUse(
+--     "WindowHalfsAndThirds",
+--     {
+--         config = {use_frame_correctness = false},
+--         hotkeys = {max_toggle = {hyper, "`"}, -- toggle not working 
+--                    max={hyper, "I"}}
+-- })
 
 Install:andUse(
     "WindowGrid",
@@ -489,7 +501,7 @@ local ksheetIsShow = false
 local ksheetAppPath = ""
 
 hs.hotkey.bind(
-    hyper, "R",
+    hyper, "M",
     function ()
         local currentAppPath = window.focusedWindow():application():path()
 
@@ -519,37 +531,63 @@ end)
 -- end):enable()
 
 -- Execute v2ray default, fuck GFW.
-local v2rayPath = "/Users/andy/v2ray/v2ray"
-local v2rayTask = nil
+-- local v2rayPath = "/Users/andy/v2ray/v2ray"
+-- local v2rayTask = nil
 
-local function stopV2ray()
-    if v2rayTask and v2rayTask:isRunning() then
-        v2rayTask:terminate()
-    end
+local stockPath = '/Users/yuzhao/gits/fin/cache/scripts/cache.sh'
+local stockTask = nil
+
+local stockMenu = hs.menubar.new()
+-- stockMenu:setIcon(stockIcon)
+stockMenu:setTitle("R")
+local function stockCb(exitCode, stdOut, stdErr)
+   local menus = {}
+   print(stdOut)
+   for k,v in string.gmatch(stdOut, " *(.-): .(%d+).\n") do
+      print(k, v)
+      table.insert(menus, { title = k })
+      table.insert(menus, { title = v })
+      table.insert(menus, { title = "-" })
+   end
+   stockMenu:setMenu(menus)
 end
 
-local function startV2ray()
-    v2rayTask = hs.task.new(v2rayPath, nil)
-    v2rayTask:start()
+local function stockExec()
+   stockTask = hs.task.new(stockPath, stockCb)
+   stockTask:start()
 end
 
-local function reloadV2ray()
-    stopV2ray()
-    startV2ray()
+stockMenu:setClickCallback(stockExec)
 
-    hs.notify.new({title="Manatee", informativeText="Reload v2ray"}):send()
-end
-startV2ray()
 
-local v2rayTrayIcon = hs.menubar.new()
-v2rayTrayIcon:setTitle("V2ray")
-v2rayTrayIcon:setTooltip("Click to reload V2ray")
-v2rayTrayIcon:setClickCallback(reloadV2ray)
+-- local function stopV2ray()
+--     if v2rayTask and v2rayTask:isRunning() then
+--         v2rayTask:terminate()
+--     end
+-- end
 
-hs.hotkey.bind(hyper, "]", reloadV2ray)
+-- local function startV2ray()
+--     v2rayTask = hs.task.new(v2rayPath, nil)
+--     v2rayTask:start()
+-- end
+
+-- local function reloadV2ray()
+--     stopV2ray()
+--     startV2ray()
+
+--     hs.notify.new({title="Manatee", informativeText="Reload v2ray"}):send()
+-- end
+-- startV2ray()
+
+-- local v2rayTrayIcon = hs.menubar.new()
+-- v2rayTrayIcon:setTitle("V2ray")
+-- v2rayTrayIcon:setTooltip("Click to reload V2ray")
+-- v2rayTrayIcon:setClickCallback(reloadV2ray)
+
+-- hs.hotkey.bind(hyper, "]", reloadV2ray)
 
 -- Force system sleep.
-hs.hotkey.bind(hyper, "delete", hs.caffeinate.systemSleep)
+-- hs.hotkey.bind(hyper, "delete", hs.caffeinate.systemSleep)
 
 -- Restart WeChat devetools.
 local doAfter = require 'hs.timer'.doAfter
@@ -573,13 +611,13 @@ hs.hotkey.bind(hyper, "v", killSip)
 
 -- Reload config.
 hs.hotkey.bind(
-    hyper, "'", function ()
+    hyper, "R", function ()
         speaker:speak("Offline to reloading...")
         hs.reload()
 end)
 
 -- We put reload notify at end of config, notify popup mean no error in config.
-hs.notify.new({title="Manatee", informativeText="Andy, I am online!"}):send()
+hs.notify.new({title="Manatee", informativeText="Cmal, I am online!"}):send()
 
 -- Speak something after configuration success.
-speaker:speak("Andy, I am online!")
+speaker:speak("Cmal, I am online!")
