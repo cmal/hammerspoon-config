@@ -17,6 +17,12 @@ local layout = require 'hs.layout'
 local window = require 'hs.window'
 local speech = require 'hs.speech'
 
+local ChromePath = "/Applications/Google Chrome.app"
+local EmacsPath = "/usr/local/Cellar/emacs-plus/26.3/Emacs.app"
+local iTermPath = "/Applications/iTerm.app"
+local DingTalkPath = '/Applications/DingTalk.app'
+local NeteaseMusicPath = '/Applications/NeteaseMusic.app'
+
 -- Init speaker.
 speaker = speech.new()
 
@@ -42,21 +48,21 @@ hs.window.animationDuration = 0 -- don't waste time on animation when resize win
 
 -- Key to launch application.
 local key2App = {
-    h = {'/Applications/iTerm.app', 'English', 2},
-    j = {'/Applications/Emacs.app', 'English', 2},
-    k = {'/Applications/Google Chrome.app', 'English', 1},
+    h = {iTermPath, 'English', 1},
+    j = {EmacsPath, 'English', 1},
+    k = {ChromePath, 'English', 1},
     f = {'/System/Library/CoreServices/Finder.app', 'English', 1},
     -- f = {'/Applications/Chromium.app', 'English', 1},
     -- c = {'/Applications/Kindle.app', 'English', 2},
     -- w = {'/Applications/WeChat.app', 'Chinese', 1},
-    z = {'/Applications/DingTalk.app', 'Chinese', 1},
+    z = {DingTalkPath, 'Chinese', 1},
     -- e = {'/Users/andy/fast-photo/node_modules/electron/dist/Electron.app', 'Chinese', 1},
-    a = {'/Applications/wechatwebdevtools.app', 'English', 2},
+    -- a = {'/Applications/wechatwebdevtools.app', 'English', 2},
     -- d = {'/Applications/Dash.app', 'English', 1},
     s = {'/Applications/System Preferences.app', 'English', 1},
     -- p = {'/Applications/Preview.app', 'Chinese', 2},
     -- b = {'/Applications/MindNode.app', 'Chinese', 1},
-    n = {'/Applications/NeteaseMusic.app', 'Chinese', 1},
+    n = {NeteaseMusicPath, 'Chinese', 1},
     -- m = {'/Applications/Sketch.app', 'English', 2},
 }
 
@@ -90,7 +96,7 @@ hs.hotkey.bind(hyper, "d", showAppKeystroke)
 
 -- Maximize window when specify application started.
 local maximizeApps = {
-    "/Applications/iTerm.app",
+    -- "/Applications/iTerm.app",
     "/Applications/Google Chrome.app",
     "/Applications/Chromium.app",
     "/System/Library/CoreServices/Finder.app",
@@ -187,7 +193,7 @@ end
 function launchApp(appPath)
     -- We need use Chrome's remote debug protocol that debug JavaScript code in Emacs.
     -- So we need launch chrome with --remote-debugging-port argument instead application.launchOrFocus.
-    if appPath == "/Applications/Google Chrome.app" then
+    if appPath == ChromePath then
         hs.execute("open -a 'Google Chrome' --args '--remote-debugging-port=9222'")
     elseif appPath == "/Applications/Chromium.app" then
         hs.execute("open -a 'Chromium' --args --user-data-dir='/tmp/chrome_dev_test' --disable-web-security")
@@ -335,6 +341,38 @@ function resizeToCenter(isMax)
     win:setFrame(f)
 end
 
+hs.hotkey.bind(hyper, "Up", function()
+  local win = hs.window.focusedWindow()
+  local f = win:frame()
+
+  f.y = f.y - 100
+  win:setFrame(f)
+end)
+
+hs.hotkey.bind(hyper, "Down", function()
+  local win = hs.window.focusedWindow()
+  local f = win:frame()
+
+  f.y = f.y + 100
+  win:setFrame(f)
+end)
+
+hs.hotkey.bind(hyper, "Left", function()
+  local win = hs.window.focusedWindow()
+  local f = win:frame()
+
+  f.x = f.x - 100
+  win:setFrame(f)
+end)
+
+hs.hotkey.bind(hyper, "Right", function()
+  local win = hs.window.focusedWindow()
+  local f = win:frame()
+
+  f.x = f.x + 100
+  win:setFrame(f)
+end)
+
 
 -- Power operation.
 caffeinateOnIcon = [[ASCII:
@@ -465,6 +503,31 @@ for key, app in pairs(key2App) do
             toggleApplication(app)
     end)
 end
+
+function table.indexof(array, value, findFn)
+    for i = 1, #array do
+       if (findFn and findFn(array[i], value) or (array[i] == value)) then
+          return i
+       end
+    end
+    return 0
+end
+
+-- function isSubString(s, sub)
+--    a = string.find(s, sub)
+--    return not (a == nil)
+-- end
+
+-- rotate among iterm, emacs, and chrome
+hotkey.bind(
+   hyper, "L",
+   function()
+      local apps = {EmacsPath, ChromePath, iTermPath}
+      local app = window.focusedWindow():application():path()
+      local index = table.indexof(apps, app) % #apps + 1
+      application.launchOrFocus(apps[index])
+end)
+
 
 -- Move application to screen.
 hs.hotkey.bind(
@@ -612,12 +675,69 @@ hs.hotkey.bind(hyper, "v", killSip)
 -- Reload config.
 hs.hotkey.bind(
     hyper, "R", function ()
-        speaker:speak("Offline to reloading...")
+        -- speaker:speak("Offline to reloading...")
         hs.reload()
 end)
 
+
+-- Focus the last used window.
+
+local function focusLastFocused()
+    local wf = hs.window.filter
+    local lastFocused = wf.defaultCurrentSpace:getWindows(wf.sortByFocusedLast)
+    if #lastFocused > 0 then lastFocused[1]:focus() end
+end
+-- On selection, copy the text and type it into the focused application.
+
+local function setAlertTimer(secs, text)
+    doAfter(secs, function ()
+               hs.alert.show(text)
+    end)
+end
+
+
+-- local alertChooser = hs.chooser.new(function(choice)
+--     if not choice then focusLastFocused(); return end
+--     hs.pasteboard.setContents(choice["subText"])
+--         focusLastFocused()
+--     hs.eventtap.keyStrokes(hs.pasteboard.getContents())
+-- end)
+
+-- chooser:choices({
+--       {
+--          ["secs"] = "Browser\n",
+--          ["subText"] = "I used these browsers",
+--       },
+--       {
+--          ["text"] = "Device\n",
+--          ["subText"] = "I used these devices",
+--       },
+
+-- })
+-- hs.hotkey.bind(hyper, "E", function() chooser:show() end)
+
+-- hs.hotkey.bind(
+--    hyper, "T",
+--    function()
+--       setAlertTimer(3, "上线")
+-- end)
+
+hs.hotkey.bind(
+   hyper, "E",
+   function()
+      hs.focus()
+      _btnTxt, seconds = hs.dialog.textPrompt("定时器", "分钟数")
+      _btnTxt, inputTxt = hs.dialog.textPrompt("定时器", "提醒文本")
+      setAlertTimer(60 * tonumber(seconds), "上线")
+      hs.alert.show("定时提醒已设置:" .. seconds .. "分钟后提醒: " .. inputTxt ..  ".")
+end)
+
+
+
+
 -- We put reload notify at end of config, notify popup mean no error in config.
-hs.notify.new({title="Manatee", informativeText="Cmal, I am online!"}):send()
+hs.notify.new({title="Manatee", informativeText="Reloaded!"}):send()
 
 -- Speak something after configuration success.
-speaker:speak("Cmal, I am online!")
+-- speaker:speak("Cmal, I am online!")
+
