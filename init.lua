@@ -1,6 +1,6 @@
 hs.loadSpoon("WindowGrid")
 hs.loadSpoon("WindowHalfsAndThirds")
-hs.loadSpoon("KSheet")
+-- hs.loadSpoon("KSheet")
 hs.loadSpoon("SpoonInstall")
 
 Install=spoon.SpoonInstall
@@ -18,7 +18,7 @@ local window = require 'hs.window'
 local speech = require 'hs.speech'
 
 local ChromePath = "/Applications/Google Chrome.app"
-local EmacsPath = "/usr/local/Cellar/emacs-plus/26.3/Emacs.app"
+local EmacsPath = "/usr/local/opt/emacs-plus@27/Emacs.app"
 local iTermPath = "/Applications/iTerm.app"
 local DingTalkPath = '/Applications/DingTalk.app'
 local NeteaseMusicPath = '/Applications/NeteaseMusic.app'
@@ -563,28 +563,28 @@ Install:andUse(
 local ksheetIsShow = false
 local ksheetAppPath = ""
 
-hs.hotkey.bind(
-    hyper, "M",
-    function ()
-        local currentAppPath = window.focusedWindow():application():path()
+-- hs.hotkey.bind(
+--     hyper, "M",
+--     function ()
+--         local currentAppPath = window.focusedWindow():application():path()
 
-        -- Toggle ksheet window if cache path equal current app path.
-        if ksheetAppPath == currentAppPath then
-            if ksheetIsShow then
-                spoon.KSheet:hide()
-                ksheetIsShow = false
-            else
-                spoon.KSheet:show()
-                ksheetIsShow = true
-            end
-            -- Show app's keystroke if cache path not equal current app path.
-        else
-            spoon.KSheet:show()
-            ksheetIsShow = true
+--         -- Toggle ksheet window if cache path equal current app path.
+--         if ksheetAppPath == currentAppPath then
+--             if ksheetIsShow then
+--                 spoon.KSheet:hide()
+--                 ksheetIsShow = false
+--             else
+--                 spoon.KSheet:show()
+--                 ksheetIsShow = true
+--             end
+--             -- Show app's keystroke if cache path not equal current app path.
+--         else
+--             spoon.KSheet:show()
+--             ksheetIsShow = true
 
-            ksheetAppPath = currentAppPath
-        end
-end)
+--             ksheetAppPath = currentAppPath
+--         end
+-- end)
 
 -- hs.hotkey.new({}, "escape", nil,
 --     function()
@@ -732,7 +732,14 @@ hs.hotkey.bind(
       hs.alert.show("定时提醒已设置:" .. seconds .. "分钟后提醒: " .. inputTxt ..  ".")
 end)
 
-
+hs.hotkey.bind(
+   hyper, "M",
+   function()
+      hs.execute("/usr/local/bin/emacsclient -n -c -a \"\"")
+      local emacs = hs.window.find("*scratch*")
+      emacs:focus()
+      resizeToCenter(false)
+end)
 
 
 -- We put reload notify at end of config, notify popup mean no error in config.
